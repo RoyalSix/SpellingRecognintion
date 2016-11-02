@@ -48,12 +48,12 @@ using namespace std;
 //******************************************************************************
 double prSpRepeat = 0.2;
 //The probability of repeating the current cognitive state again as the next state
-//we make it 0.2 initially, but you can try different values to see the effects.
+//I make it 0.2 initially, but you can try different values to see the effects.
 
 double prSpMoveOn = 0.8;
 //The probability of moving from the current cognitive state to other states
 //	as the next state
-//we make it 0.8 initially, but you can try different values to see the effects.
+//I make it 0.8 initially, but you can try different values to see the effects.
 
 //********************************************************
 //Note that prSpRepeat + prSpMoveon should always equal 1
@@ -65,7 +65,7 @@ double spDegenerateTransitionDistancePower = 2;
 //(spDegenerateTransitionDistancePower) to the 
 //(the distance between the current state to the next state)th power.
 //In the setting of the original spelling model in the project,
-//we make it 2, but you can try different values to see the effects.
+//I make it 2, but you can try different values to see the effects.
 
 double spDegenerateInitialStateDistancePower = 2;
 //The likelihood of some character in a word as the initial cognitive state
@@ -75,7 +75,7 @@ double spDegenerateInitialStateDistancePower = 2;
 //In the setting of the original spelling model in the project,
 // spDegenerateInitialStateDistancePower and spDegenerateTransitionDistancePower
 //have the same value, but you can make them different to see the effects
-//By default, we make it 2, but you can try different values to see the effects.
+//By default, I make it 2, but you can try different values to see the effects.
 
 
 void setParametersSpellingModel()
@@ -128,19 +128,19 @@ void displayParametersSpellingModel()
 double prKbHit = 0.6;
 //The probability that you want to type a character and you do successfully make it
 //In the setting of the original keyboard model in the project,
-//we make it 0.9, but you can try different values to see the effects.
+//I make it 0.6, but you can try different values to see the effects.
 
 double prKbMiss = 0.4;
 //The sum of probabilities that you want to type a character but end in touching 
 //a different character.
-//we make it 0.1, but you can try different values to see the effects.
+//I make it 0.4, but you can try different values to see the effects.
 
 //*******************************************************
 //Note that prKbHit + prKbMiss should always equal 1
 //*******************************************************
 
 //In the setting of the original keyboard model in the project,
-//we make it 0.2, but you can try different values to see the effects.
+//I make it 0.2, but you can try different values to see the effects.
 
 
 double kbDegenerateDistancePower = 2;
@@ -148,7 +148,7 @@ double kbDegenerateDistancePower = 2;
 //is proportion to the inverse of 
 //(kbDegenerateDistancePower) raised to the (distance between them) th power
 //In the setting of the original keyboard model in the project,
-//we make it 2, but you can try different constants to see the effects.
+//I make it 2, but you can try different constants to see the effects.
 
 double scaleFactor = 0;
 
@@ -208,8 +208,8 @@ bool traceON = true;   // output tracing messages
 double prCharGivenCharOfState(char charGenerated, char charOfTheState, double scaleFactor)
 //1/2 + 1/4 + 1/8
 {   // KEYBOARD STATE
-	// CharGenerated = What we actually touched (typed)
-	// CharOfTheState = What we want to type in our mind (our cognitive state)
+	// CharGenerated = What I actually touched (typed)
+	// CharOfTheState = What I want to type in our mind (our cognitive state)
 	if (charGenerated == charOfTheState) return prKbHit;
 	else {
 		double bottom = pow(kbDegenerateDistancePower, distanceOfLetters(charGenerated, charOfTheState));
@@ -289,7 +289,7 @@ void getPrTableForPossibleInitialStates(double prTable[], int sizeOfTable)
 void getPrTableForPossibleNextStates
 (double transitionPrTable[], int sizeOfTable, int currentState)
 {
-	//We are working on a word of sizeOfTable-1 characters:
+	//Working on a word of sizeOfTable-1 characters:
 	//     i.e. the number of character states is sizeOfTable-1.
 	//Index these character states from 0 to sizeOfTable-2 respectively, while
 	//     the index of the special final state F is sizeOfTable-1.
@@ -450,6 +450,7 @@ void typeOneWord(char word[], char output[], bool traceON, int maxOutput)
 	while (word[size]) {
 		size++;
 	}
+	//initial state 
 	double* wordArray = new double[size];
 	getPrTableForPossibleInitialStates(wordArray, size);
 	currentState = take1SampleFrom1PrSpace(wordArray, size);
@@ -461,7 +462,7 @@ void typeOneWord(char word[], char output[], bool traceON, int maxOutput)
 		cout << " the next state: ";
 	}
 
-	//main loop
+	//main loop...next states
 	size++;
 	bool finalState = false;
 	for (int i = 1; !finalState; i++) {
@@ -501,6 +502,7 @@ double prOf1CharSeriesWhenTyping1Word(char observedString[], char wordString[]) 
 	int sizeOfObservedString = strlen(observedString);
 	int sizeOfTableStates = sizeOfStates + 2;
 	int sizeOfTableOberservedString = sizeOfObservedString + 2;
+	//These values correspond to the Initial State OBSERVATIONS and the Final State
 	
 	double sum = 0;
 	vector < vector <double> > fowardTable(sizeOfTableOberservedString, vector <double>(sizeOfTableStates, 0));
@@ -512,6 +514,7 @@ double prOf1CharSeriesWhenTyping1Word(char observedString[], char wordString[]) 
 			sum = 0;
 			for (int k = 0; k < sizeOfTableStates; k++) {
 				if (k == 0) {
+					//Probability of going from the initial state to this current state (k)
 					double* initialStates = new double[sizeOfTableStates];
 					getPrTableForPossibleInitialStates(initialStates + 1, sizeOfStates);
 					initialStates[sizeOfTableStates - 1] = 0;
@@ -520,10 +523,11 @@ double prOf1CharSeriesWhenTyping1Word(char observedString[], char wordString[]) 
 					sum += fowardTable[i - 1][k] * initialStates[j];
 				}
 				else {
+					//Probability of going from the k state to the current state j
 					double* currentStates = new double[sizeOfTableStates];
 					getPrTableForPossibleNextStates(currentStates, sizeOfStates + 1, k - 1);
 					if (j < 1) {
-						//Initial State
+						//Initial State going to Initial State which is impossible
 						cout << fowardTable[i - 1][k] << " * " << 0 << " = 0" << endl;
 						sum += fowardTable[i - 1][k] * 0;
 					}
@@ -535,19 +539,22 @@ double prOf1CharSeriesWhenTyping1Word(char observedString[], char wordString[]) 
 				
 			}
 			double prOfTyping = prCharGivenCharOfState(observedString[i - 1], wordString[j - 1], scaleFactor);
-			//prOfTyping is giving wrong calculations
-			if (j > sizeOfStates || j < 1 || i > sizeOfObservedString)
-			{
+			if (j > sizeOfStates || j < 1 || i > sizeOfObservedString) {
+				//if on the last column or row or first row (not sure if this is needed)
 				prOfTyping = 0;
 				if (j > sizeOfStates && i > sizeOfObservedString)
+				//if on the last column and row then this is the final probability
 					prOfTyping = 1;
 			}
 			cout << "total is " << sum << " * " << prOfTyping << " = ";
 			sum *= prOfTyping;
+			//Sum is the summation of all the previous Column State probablity 
+			//transitions multiplied by the observation probability of seeing the current observation(letter)
 			cout << sum << endl << endl;
 			fowardTable[i][j] = sum;
 		}
 	}
 	return fowardTable[sizeOfTableOberservedString - 1][sizeOfTableStates - 1];
+	//position of final probability
 }
 
