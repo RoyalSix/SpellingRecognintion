@@ -8,6 +8,7 @@
 #include <vector>
 #include "models.h"
 #include <fstream>
+#include <math.h> 
 ofstream fsOut;
 ifstream fsIn;
 char inLine[] = "";
@@ -17,7 +18,7 @@ using namespace std;
 
 
 
-
+//TODO: FINISH COMMENTING
 
 //******************************************************************************
 //******************************************************************************
@@ -48,15 +49,14 @@ using namespace std;
 //******************************************************************************
 double prSpRepeat = 0.2;
 //The probability of repeating the current cognitive state again as the next state
-//I make it 0.2 initially, but you can try different values to see the effects.
+
 
 double prSpMoveOn = 0.8;
 //The probability of moving from the current cognitive state to other states
 //	as the next state
-//I make it 0.8 initially, but you can try different values to see the effects.
 
 //********************************************************
-//Note that prSpRepeat + prSpMoveon should always equal 1
+//prSpRepeat + prSpMoveon should always equal 1
 //********************************************************
 
 double spDegenerateTransitionDistancePower = 2;
@@ -65,7 +65,7 @@ double spDegenerateTransitionDistancePower = 2;
 //(spDegenerateTransitionDistancePower) to the 
 //(the distance between the current state to the next state)th power.
 //In the setting of the original spelling model in the project,
-//I make it 2, but you can try different values to see the effects.
+
 
 double spDegenerateInitialStateDistancePower = 2;
 //The likelihood of some character in a word as the initial cognitive state
@@ -75,11 +75,15 @@ double spDegenerateInitialStateDistancePower = 2;
 //In the setting of the original spelling model in the project,
 // spDegenerateInitialStateDistancePower and spDegenerateTransitionDistancePower
 //have the same value, but you can make them different to see the effects
-//By default, I make it 2, but you can try different values to see the effects.
 
 
-void setParametersSpellingModel()
-{
+
+/**
+  * @desc Lets user set the spelling model parameters, these control
+  *		the probability that an agent will type the same word twice
+  * 	or move on.
+*/
+void setParametersSpellingModel() {
 	cout << endl
 		<< "Reset the parameters of the spelling model:" << endl << endl;
 
@@ -108,8 +112,8 @@ void setParametersSpellingModel()
 	}
 }
 
-void displayParametersSpellingModel()
-{
+
+void displayParametersSpellingModel() {
 	cout << endl
 		<< "Parameter values of the spelling model:" << endl
 		<< "   P_repeat  = " << prSpRepeat << endl
@@ -128,19 +132,15 @@ void displayParametersSpellingModel()
 double prKbHit = 0.6;
 //The probability that you want to type a character and you do successfully make it
 //In the setting of the original keyboard model in the project,
-//I make it 0.6, but you can try different values to see the effects.
 
 double prKbMiss = 0.4;
 //The sum of probabilities that you want to type a character but end in touching 
 //a different character.
-//I make it 0.4, but you can try different values to see the effects.
 
 //*******************************************************
-//Note that prKbHit + prKbMiss should always equal 1
+//prKbHit + prKbMiss should always equal 1
 //*******************************************************
 
-//In the setting of the original keyboard model in the project,
-//I make it 0.2, but you can try different values to see the effects.
 
 
 double kbDegenerateDistancePower = 2;
@@ -148,13 +148,17 @@ double kbDegenerateDistancePower = 2;
 //is proportion to the inverse of 
 //(kbDegenerateDistancePower) raised to the (distance between them) th power
 //In the setting of the original keyboard model in the project,
-//I make it 2, but you can try different constants to see the effects.
 
 double scaleFactor = 0;
 
 
-void setParametersKbModel()
-{
+
+/**
+  * @desc Lets user set the keyboard model parameters, these control
+  *		the probability that an agent will try to type a character
+  * 	in their mind and they will hit it.
+*/
+void setParametersKbModel() {
 	cout << endl
 		<< "Reset the parameters of the keyboard model:" << endl << endl;
 
@@ -181,8 +185,7 @@ void setParametersKbModel()
 	}
 }
 
-void displayParametersKbModel()
-{
+void displayParametersKbModel(){
 	cout << endl
 		<< "Parameter values of the keyboard model:" << endl
 		<< "   P_hit  = " << prKbHit << endl
@@ -190,26 +193,17 @@ void displayParametersKbModel()
 		<< "   deg_kb = " << kbDegenerateDistancePower << endl << endl;
 }
 
+bool traceON = true;   // output tracing of state transitions
 
-//******************************************************************************
-//******************************************************************************
-//
-//  Trace flag and the alphabet table
-//
-//******************************************************************************
-//******************************************************************************
-bool traceON = true;   // output tracing messages
-
-
-					   /************************************************************************/
-					   //Calculate and return the probability of charGenerated actually typed
-					   //given charOfTheState as the underlying cognitive state. 
-					   /************************************************************************/
-double prCharGivenCharOfState(char charGenerated, char charOfTheState, double scaleFactor)
-//1/2 + 1/4 + 1/8
-{   // KEYBOARD STATE
-	// CharGenerated = What I actually touched (typed)
-	// CharOfTheState = What I want to type in our mind (our cognitive state)
+/**
+  * @desc Calculate and return the probability of charGenerated actually typed
+  *		given charOfTheState as the underlying cognitive state. 
+  * @param char charGenerated - What we actually touched (typed)
+  * @param char charOfTheState - What we want to type in our mind (our cognitive state)
+  * @param double scaleFactor - the pre computated scale factor
+  * @return double - Pr(charOfTheState | charGenerated)
+*/
+double prCharGivenCharOfState(char charGenerated, char charOfTheState, double scaleFactor) {
 	if (charGenerated == charOfTheState) return prKbHit;
 	else {
 		double bottom = pow(kbDegenerateDistancePower, distanceOfLetters(charGenerated, charOfTheState));
@@ -218,6 +212,13 @@ double prCharGivenCharOfState(char charGenerated, char charOfTheState, double sc
 	}
 }
 
+
+/**
+  * @desc find the distance of two observed letters based
+  * 	on a keyboard model that loops around in a 360
+  * @param string $msg - the message to be displayed
+  * @return int dist - the distance of two given 
+*/
 int distanceOfLetters(char charOne, char charTwo) {
 	int dist = abs(charTwo - charOne);
 	if (dist > 13) {
@@ -226,7 +227,12 @@ int distanceOfLetters(char charOne, char charTwo) {
 	return dist;
 }
 
-
+/**
+* @desc - determines the scale factor for the model based on the
+* 	amount of possible observations
+* @param int size - size of the table
+* @return double scale - the computed scale
+*/
 double getScaleFactor(int size) {
 	double scale = 0;
 	for (int i = 1; i < size; i++) {
@@ -241,29 +247,20 @@ double getScaleFactor(int size) {
 	return scale;
 }
 
-
-/************************************************************************/
-//Calculate for each cognitive state excluding the special states I and F,
-//     the probability of that cognitive state being the first cognitive state
-//     after the transition out of the special state I.
-//Note that the value of the parameter sizeOfTable should be
-//     exactly the number characters in the word.
-//Store these prbabilities in the prTable array.
-/************************************************************************/
-void getPrTableForPossibleInitialStates(double prTable[], int sizeOfTable)
-{
+/**
+* @desc - Calculate for each cognitive state excluding the special states I and F,
+*	the probability of that cognitive state being the first cognitive state
+*	after the transition out of the special state I.
+* @param double * prTable - The transition table to
+* 	store state Pr for inital states based on amount of possible states
+* @param int sizeOfTable - size of the table
+*/
+void getPrTableForPossibleInitialStates(double prTable[], int sizeOfTable) {
 	//It is a word of sizeOfTable characters:
 	//     i.e. the number of character states is sizeOfTable.
-	//     let's index these characters from 0 to sizeOfTable-1.
+	//     these characters are indexed from 0 to sizeOfTable-1.
 	//
 
-	//First calculate the sum of ratios of probabilities of
-	//     going from the special I state into these character states.
-	//This allows you to calculate the scaling factor to determine the probabilities.
-
-
-	//Second, for each character state calculate the probability
-	//     transitioning from the special I state into the character state.
 	double scale = 0;
 	for (int i = 0; i < sizeOfTable; i++) {
 		scale += pow(2, i + 1);
@@ -277,35 +274,20 @@ void getPrTableForPossibleInitialStates(double prTable[], int sizeOfTable)
 
 
 
-/************************************************************************/
-//Calculate for each actual cognitive state for a word
-//     (excluding the special I state),
-//     the probability of that cognitive state being the next cognitive state
-//     given that currentState is the index of the current state.
-//Note that the value of the parameter sizeOfTable should be
-//     1 + the number characters in the word,
-//Store these probabilities in the transitionPrTable[] array.
-/************************************************************************/
-void getPrTableForPossibleNextStates
-(double transitionPrTable[], int sizeOfTable, int currentState)
-{
-	//Working on a word of sizeOfTable-1 characters:
-	//     i.e. the number of character states is sizeOfTable-1.
-	//Index these character states from 0 to sizeOfTable-2 respectively, while
-	//     the index of the special final state F is sizeOfTable-1.
-	//currentState is the index of the current state in the word
-
-	//First calculate the sum of ratios of probabilities of
-	//     going from the current state into the other down-stream states down in word
-	//     including all the down-stream character states and the
-	//     special F final state.
-	//This allows you to calculate the scaling factor to determine the probabilities.
-
-	//Second, for each state (excluding the special I state)
-	//     calculate the probability of
-	//     transitioning from the current state into the character state
-	//     and store the probability into the table.
-
+/**
+* @desc Calculate for each actual cognitive state for a word
+* 	(excluding the special I state), the probability of 
+* 	that cognitive state being the next cognitive state
+* 	given that currentState is the index of the current state.
+* 	The value of the parameter sizeOfTable should be
+* 	1 + the number characters in the word,
+* @param double * transitionPrTable - The transition table to
+*	store state Pr for next possible states (not including
+* 	initial states)
+* @param int sizeOfTable - size of the table
+* @param int currentState - current state index before the transition
+*/
+void getPrTableForPossibleNextStates (double transitionPrTable[], int sizeOfTable, int currentState) {
 	double scale = 0;
 	for (int i = 0; i < sizeOfTable - 1 - currentState; i++) {
 		scale += pow(2, i + 1);
@@ -325,22 +307,16 @@ void getPrTableForPossibleNextStates
 
 }
 
-/************************************************************************/
-//  Programming #2 
-//
-//  List below are function prototypes of functions given  or required 
-//		to be implemented in Programming #2 
-//
-/************************************************************************/
-
-/************************************************************************/
-//Given the probabilities (of sizeOfTable elements) stored in prTable,
-//	try to randomly take a sample out of sizeOfTable elements
-//	according to the probabilities of sizeOfTable elements;
-//Return the index of the non-deterministically sampled element.
-/************************************************************************/
-int take1SampleFrom1PrSpace(double prTable[], int sizeOfTable)
-{
+/**
+* @desc Given the probabilities (of sizeOfTable elements) stored in prTable,
+*	randomly takes a sample out of sizeOfTable elements
+*	according to the probabilities of sizeOfTable elements;
+* @param double * prTable - Pr table that includes Pr for all observations
+* 	in model regardless of current state
+* @param int sizeOfTable - the size of the HMM table
+* @return int - the index of the non-deterministically sampled element.
+*/
+int take1SampleFrom1PrSpace(double prTable[], int sizeOfTable) {
 	int i;
 	double prSum = 0;
 	for (i = 0; i<sizeOfTable; i++)
@@ -388,20 +364,16 @@ int take1SampleFrom1PrSpace(double prTable[], int sizeOfTable)
 
 
 
-
-/************************************************************************/
-//
-//Given the character to type (charToType) 
-//	(assuming that the 1D keyboard of 26 keys is used),
-//	(assuming that prTable[] for storing 26 prbabilities),
-//	calculate pr(charGenerated = 'a' | charToType),
-//	calculate pr(charGenerated = 'b' | charToType), 
-//	...
-//	calculate pr(charGenerated = 'z' | charToType), and
-//	store these probabilities in prTable.
-/************************************************************************/
-void getKeyboardProbabilityTable(char charToType, double prTable[])
-{
+/**
+  * @desc Given the character to type (charToType) calculate 
+  * 	pr(charGenerated = a observation | charToType) for 
+  * 	each observation, and store these probabilities in prTable.
+  * @param char charToType - character in the state the agent is
+  * 	trying to type
+  * @param double prTable - The transition table to
+*	store observation Pr's in account of current charToType
+*/
+void getKeyboardProbabilityTable(char charToType, double prTable[]) {
 	int currentState = 0;
 	int sizeOfTable = 26;
 	char asciiMap[] = "abcdefghijklmnopqrstuvwxyz";
@@ -416,14 +388,15 @@ void getKeyboardProbabilityTable(char charToType, double prTable[])
 	}
 }
 
-
-/************************************************************************/
-//Simulate the keyboard model:
-//Given the charToTye, simulate what character may actually
-//	be typed and return it as the result.
-/************************************************************************/
-char typeOneChar(char charToType)
-{
+/**
+  * @desc Given the charToType, simulates what character may actually
+  * 	be typed and return it as the result.
+  * @param char charToType - The character in the state being attempted
+  *		to type
+  * @return char - the randomly chosen character based on the spelling
+  * 	model and the keyboard model
+*/
+char typeOneChar(char charToType) {
 	char asciiMap[] = "abcdefghijklmnopqrstuvwxyz";
 	double prTable[26];
 	getKeyboardProbabilityTable(charToType, prTable);
@@ -431,16 +404,11 @@ char typeOneChar(char charToType)
 }
 
 
-
-/************************************************************************/
-//Simulate the combination of the spelling model and the keyboard model:
-//Given a word stored in the word array, simulate what may actually
-//	be typed and store the result in the output array.
-//maxOutput specifies the capacity limit of the output array, by default it is 100.
-//When traceON is true (by default it is false), extra outputs are provided as traces.
-/************************************************************************/
-void typeOneWord(char word[], char output[], bool traceON, int maxOutput)
-{
+/**
+  * @desc Given a word stored in the word array, simulates what may actually
+  * be typed and store the result in the output array.
+*/
+void typeOneWord(char word[], char output[], bool traceON, int maxOutput) {
 	int size = 0;
 	int currentState = 0;
 	char charInState;
@@ -450,7 +418,6 @@ void typeOneWord(char word[], char output[], bool traceON, int maxOutput)
 	while (word[size]) {
 		size++;
 	}
-	//initial state 
 	double* wordArray = new double[size];
 	getPrTableForPossibleInitialStates(wordArray, size);
 	currentState = take1SampleFrom1PrSpace(wordArray, size);
@@ -461,8 +428,9 @@ void typeOneWord(char word[], char output[], bool traceON, int maxOutput)
 	if (traceON) {
 		cout << " the next state: ";
 	}
+	delete[] wordArray;
 
-	//main loop...next states
+	//main loop
 	size++;
 	bool finalState = false;
 	for (int i = 1; !finalState; i++) {
@@ -483,8 +451,11 @@ void typeOneWord(char word[], char output[], bool traceON, int maxOutput)
 		if (traceON) {
 			cout << "'" << output[i] << "'" << " pressed, current state: " << word[currentState] << ", " << currentState << " the next state: ";
 		}
+		delete[] wordArray;
 	}
 }
+
+
 void typeOneArticle(char * corruptedMessageFile, char * sourceArticle, bool trace) {
 	fsIn.open(sourceArticle);
 	fsOut.open(corruptedMessageFile);
@@ -494,67 +465,395 @@ void typeOneArticle(char * corruptedMessageFile, char * sourceArticle, bool trac
 	}
 	fsOut.close();
 	fsIn.close();
-}// end of the function
- /*******************************************************************/
+}
+
+
 double prOf1CharSeriesWhenTyping1Word(char observedString[], char wordString[]) {
 	double scaleFactor = getScaleFactor(26);
 	int sizeOfStates = strlen(wordString);
 	int sizeOfObservedString = strlen(observedString);
 	int sizeOfTableStates = sizeOfStates + 2;
 	int sizeOfTableOberservedString = sizeOfObservedString + 2;
-	//These values correspond to the Initial State OBSERVATIONS and the Final State
-	
+
 	double sum = 0;
 	vector < vector <double> > fowardTable(sizeOfTableOberservedString, vector <double>(sizeOfTableStates, 0));
 	fowardTable[0][0] = 1;
 	for (int i = 1; i < sizeOfTableOberservedString; i++) {
-		cout << i + 1 << " Column: " << endl;
+		//cout << i + 1 << " Column: " << endl;
 		for (int j = 0; j < sizeOfTableStates; j++) {
-			cout << j + 1 << " Row: " << endl;
+			//cout << j + 1 << " Row: " << endl;
 			sum = 0;
 			for (int k = 0; k < sizeOfTableStates; k++) {
 				if (k == 0) {
-					//Probability of going from the initial state to this current state (k)
 					double* initialStates = new double[sizeOfTableStates];
 					getPrTableForPossibleInitialStates(initialStates + 1, sizeOfStates);
 					initialStates[sizeOfTableStates - 1] = 0;
 					initialStates[0] = 0;
-					cout << fowardTable[i - 1][k] << " * " << initialStates[j] << " = " << fowardTable[i - 1][k] * initialStates[j] << endl;
+					//cout << fowardTable[i - 1][k] << " * " << initialStates[j] << " = " << fowardTable[i - 1][k] * initialStates[j] << endl;
 					sum += fowardTable[i - 1][k] * initialStates[j];
+					delete[] initialStates;
 				}
 				else {
-					//Probability of going from the k state to the current state j
 					double* currentStates = new double[sizeOfTableStates];
 					getPrTableForPossibleNextStates(currentStates, sizeOfStates + 1, k - 1);
 					if (j < 1) {
-						//Initial State going to Initial State which is impossible
-						cout << fowardTable[i - 1][k] << " * " << 0 << " = 0" << endl;
+						//Initial State
+						//cout << fowardTable[i - 1][k] << " * " << 0 << " = 0" << endl;
 						sum += fowardTable[i - 1][k] * 0;
 					}
 					else {
-						cout << fowardTable[i - 1][k] << " * " << currentStates[j - 1] << " = " << fowardTable[i - 1][k] * currentStates[j - 1] << endl;
+						//cout << fowardTable[i - 1][k] << " * " << currentStates[j - 1] << " = " << fowardTable[i - 1][k] * currentStates[j - 1] << endl;
 						sum += fowardTable[i - 1][k] * currentStates[j - 1];
 					}
+					delete[] currentStates;
 				}
-				
+
 			}
 			double prOfTyping = prCharGivenCharOfState(observedString[i - 1], wordString[j - 1], scaleFactor);
-			if (j > sizeOfStates || j < 1 || i > sizeOfObservedString) {
-				//if on the last column or row or first row (not sure if this is needed)
+			if (j > sizeOfStates || j < 1 || i > sizeOfObservedString)
+			{
 				prOfTyping = 0;
 				if (j > sizeOfStates && i > sizeOfObservedString)
-				//if on the last column and row then this is the final probability
 					prOfTyping = 1;
 			}
-			cout << "total is " << sum << " * " << prOfTyping << " = ";
+			//cout << "total is " << sum << " * " << prOfTyping << " = ";
 			sum *= prOfTyping;
-			//Sum is the summation of all the previous Column State probablity 
-			//transitions multiplied by the observation probability of seeing the current observation(letter)
-			cout << sum << endl << endl;
+			//cout << sum << endl << endl;
 			fowardTable[i][j] = sum;
 		}
 	}
 	return fowardTable[sizeOfTableOberservedString - 1][sizeOfTableStates - 1];
-	//position of final probability
 }
 
+
+void testPrOfTypingDocument() {
+	bool cont = true;
+	while (cont) {
+		string doc1;
+		char person;
+		cout << "Enter the letter of the person to test: " << endl;
+		cout << "W.		Winnie" << endl;
+		cout << "M.		Manny" << endl;
+		cout << "C.		Cathy" << endl;
+		cout << "J.		Johnny" << endl;
+		cin >> person;
+		switch (person) {
+		case 'W': case 'w':
+			prKbHit = 0.7;
+			prKbMiss = 0.3;
+			kbDegenerateDistancePower = 2;
+			spDegenerateTransitionDistancePower = 2;
+			prSpRepeat = 0.1;
+			prSpMoveOn = 0.9;
+
+			break;
+		case 'M': case 'm':
+			prKbHit = 0.9;
+			prKbMiss = 0.1;
+			kbDegenerateDistancePower = 2;
+			spDegenerateTransitionDistancePower = 2;
+			prSpRepeat = 0.3;
+			prSpMoveOn = 0.7;
+			break;
+		case 'C': case 'c':
+			prKbHit = 0.7;
+			prKbMiss = 0.3;
+			kbDegenerateDistancePower = 2;
+			spDegenerateTransitionDistancePower = 2;
+			prSpRepeat = 0.3;
+			prSpMoveOn = 0.7;
+			break;
+		case 'J': case 'j':
+			prKbHit = 0.9;
+			prKbMiss = 0.1;
+			kbDegenerateDistancePower = 2;
+			spDegenerateTransitionDistancePower = 2;
+			prSpRepeat = 0.1;
+			prSpMoveOn = 0.9;
+			break;
+		}
+		cout << "Got the parameters: " << endl;
+		displayParametersKbModel();
+		displayParametersSpellingModel();
+		cout << "Enter the letter of the document you want to test: " << endl;
+		cin >> doc1;
+		cout << "The probability of seeing this document when trying to type the biola statement is: " <<
+			logPrOfGettingDocument1WhenTypingDocument2("biola.txt", doc1 + ".txt") << endl;
+		cout << "Hit any key to go again or press '.' to end." << endl;
+		if (_getch() == '.') cont = false;
+	}
+ }
+
+
+double logPrOfGettingDocument1WhenTypingDocument2(string document1, string document2) {
+	double sum = 0;
+	ifstream fsInDoc1;
+	ifstream fsInDoc2;
+	string inLineDoc1;
+	string inLineDoc2;
+	fsInDoc2.open(document2);
+	fsInDoc1.open(document1);
+	while (fsInDoc2 >> inLineDoc2 && fsInDoc1 >> inLineDoc1) {
+		char* doc2Char = new char[inLineDoc2.length() + 1];
+		strcpy(doc2Char, inLineDoc2.c_str());
+		char* doc1Char = new char[inLineDoc1.length() + 1];
+		strcpy(doc1Char, inLineDoc1.c_str());
+		//cout << "Pr(" << inLineDoc1 << "|" << inLineDoc2 << ") = " <<
+			//prOf1CharSeriesWhenTyping1Word(doc2Char, doc1Char) << " + " << sum << " +" << endl;
+		sum += log(prOf1CharSeriesWhenTyping1Word(doc2Char, doc1Char));
+		delete[] doc1Char;
+		delete[] doc2Char;
+	}
+	return sum;
+}
+
+
+void getPrFromDocument(string document1, string document2) {
+	const double INITIAL_INC = 0.1;
+	prKbHit = INITIAL_INC;
+	prKbMiss = 1 - INITIAL_INC;
+	prSpRepeat = INITIAL_INC;
+	prSpMoveOn = 1 - INITIAL_INC;
+	double highestPr = logPrOfGettingDocument1WhenTypingDocument2(document1, document2);;
+	double highestPrHit;
+	double highestPrRepeat;
+	for (double i = INITIAL_INC; i < 1; i += INITIAL_INC) {
+		for (double j = INITIAL_INC; j < 1; j += INITIAL_INC) {
+			i = floor(i * 100.00 + 0.5) / 100.00;
+			j = floor(j * 100.00 + 0.5) / 100.00;
+			prKbHit = i;
+			prKbMiss = 1 - i;
+			prSpRepeat = j;
+			prSpMoveOn = 1 - j;
+			double currPr = logPrOfGettingDocument1WhenTypingDocument2(document1, document2);
+			if (currPr > highestPr) {
+				highestPr = currPr;
+				highestPrHit = i;
+				highestPrRepeat = j;
+			}
+		}
+	}
+	prKbHit = highestPrHit;
+	prKbMiss = 1 - highestPrHit;
+	prSpRepeat = highestPrRepeat;
+	prSpMoveOn = 1 - highestPrRepeat;
+}
+
+void testgetPrFromDocument() {
+	bool cont = true;
+	string CORRUPTED = "corruptedBiolaVision1";
+	while (cont) {
+		cout << "To test " << CORRUPTED << " press . or enter name of document" << endl;
+		if (_getch() == '.') {
+			cout << "Learning from the document: " << CORRUPTED << endl;
+		}
+		else {
+			cin >> CORRUPTED;
+			cout << "Learning from the document: " << CORRUPTED << ".txt" << endl;
+		}
+		getPrFromDocument("biola.txt", CORRUPTED + ".txt");
+		cout << "Got most likely parameters as: "; 
+		displayParametersKbModel();
+		displayParametersSpellingModel();
+		cout << "Hit any key to go again or press '.' to end." << endl;
+		if (_getch() == '.') cont = false;
+	}
+}
+
+void testRecoverOriginal() {
+	bool cont = true;
+	string doc1 = "vocabulary.txt"; 
+	string doc2 = "corruptedMessage1.txt";
+	string doc3 = "recoveredMessage_V1.txt";
+	cout << "Parameters for this test are: " << endl;
+	displayParametersKbModel();
+	displayParametersSpellingModel();
+	while (cont) {
+		cout << "Got document " << doc2 << endl;
+		cout << "Attempting to recover message..." << endl;
+		recoverOriginal(doc1, doc2, doc3);
+		cout << "Message recovered, results in " << doc3 << endl;
+		cout << "Hit any key to go again or press '.' to end." << endl;
+		if (_getch() == '.') cont = false;
+	}
+}
+
+void recoverOriginal(string doc1, string doc2, string doc3) {
+	const int AMOUNT_OF_DATA = 4;
+	ifstream fsInDoc1;
+	ifstream fsInDoc2;
+	ofstream fsOutDoc;
+	string inLineDoc1;
+	string inLineDoc2;
+	fsInDoc2.open(doc2);
+	fsOutDoc.open(doc3);
+	while(fsInDoc2 >> inLineDoc2){
+		//observed words
+		vector<double> highestPr;
+		vector<string> highestPrString;
+		fsInDoc1.open(doc1);
+		while (fsInDoc1 >> inLineDoc1) {
+			//vocab words
+			char* doc2Char = new char[inLineDoc2.length() + 1];
+			strcpy(doc2Char, inLineDoc2.c_str());
+			char* doc1Char = new char[inLineDoc1.length() + 1];
+			strcpy(doc1Char, inLineDoc1.c_str());
+			//cout << "Pr(" << inLineDoc1 << "|" << inLineDoc2 << ") = " <<
+			//prOf1CharSeriesWhenTyping1Word(doc2Char, doc1Char) << " + " << sum << " +" << endl;
+			double currPr = log(prOf1CharSeriesWhenTyping1Word(doc2Char, doc1Char));
+			if (highestPr.size() == 0) {
+				highestPr.insert(highestPr.end(), currPr);
+				highestPrString.insert(highestPrString.end(), doc1Char);
+			}
+			else {
+				for (int i = 0; i < AMOUNT_OF_DATA && i < highestPr.size(); i++) {
+					if (currPr > highestPr[i]) {
+						highestPr.insert(highestPr.begin() + i, currPr);
+						highestPrString.insert(highestPrString.begin() + i, doc1Char);
+						break;
+					}
+					if (i == highestPr.size() - 1) {
+						highestPr.insert(highestPr.end(), currPr);
+						highestPrString.insert(highestPrString.end(), doc1Char);
+						break;
+					}
+				}
+			}
+			delete[] doc1Char;
+			delete[] doc2Char;
+		}
+		for (int i = 0; i < AMOUNT_OF_DATA; i++) {
+			fsOutDoc << highestPrString[i] << " ";
+		}
+		fsOutDoc << endl;
+		fsInDoc1.close();
+	}
+	fsOutDoc.close();
+}
+
+void testRecoverOriginal2() {
+	bool cont = true;
+	string doc1 = "vocabulary.txt";
+	string doc2 = "corruptedMessage1.txt";
+	string doc3 = "corruptedMessage2.txt";
+	string doc4 = "recoveredMessage_V2.txt";
+	cout << "Got the parameters: " << endl;
+	displayParametersKbModel();
+	displayParametersSpellingModel();
+	while (cont) {
+		cout << "Got document " << doc2 << " and " << doc3 << endl;
+		cout << "Attempting to recover message..." << endl;
+		recoverOriginal2(doc1, doc2, doc3, doc4);
+		cout << "Message recovered, results in " << doc3 << endl;
+		cout << "Hit any key to go again or press '.' to end." << endl;
+		if (_getch() == '.') cont = false;
+	}
+}
+
+void recoverOriginal2(string doc1, string doc2, string doc3, string doc4) {
+	const int AMOUNT_OF_DATA = 4;
+	vector<vector <string> > listOfHighestPrsString;
+	ifstream fsInDoc1;
+	ifstream fsInDoc2;
+	ifstream fsInDoc3;
+	ofstream fsOutDoc;
+	string inLineDoc1;
+	string inLineDoc2;
+	string inLineDoc3;
+	fsInDoc2.open(doc2);
+	fsInDoc3.open(doc3);
+	fsOutDoc.open(doc4);
+	while (fsInDoc2 >> inLineDoc2 && fsInDoc3 >> inLineDoc3) {
+		//observed words
+		vector<double> highestPr;
+		vector<string> highestPrString;
+		fsInDoc1.open(doc1);
+		while (fsInDoc1 >> inLineDoc1) {
+			//vocab words
+			char* doc3Char = new char[inLineDoc3.length() + 1];
+			strcpy(doc3Char, inLineDoc3.c_str());
+			char* doc2Char = new char[inLineDoc2.length() + 1];
+			strcpy(doc2Char, inLineDoc2.c_str());
+			char* doc1Char = new char[inLineDoc1.length() + 1];
+			strcpy(doc1Char, inLineDoc1.c_str());
+			//cout << "Pr(" << inLineDoc1 << "|" << inLineDoc2 << ") = " <<
+			//prOf1CharSeriesWhenTyping1Word(doc2Char, doc1Char) << " + " << sum << " +" << endl;
+			double currPrDoc2 = log(prOf1CharSeriesWhenTyping1Word(doc2Char, doc1Char));
+			double currPrDoc3 = log(prOf1CharSeriesWhenTyping1Word(doc3Char, doc1Char));
+			double currPr = currPrDoc2 * currPrDoc3 * - 1;
+			if (highestPr.size() == 0) {
+				highestPr.insert(highestPr.end(), currPr);
+				highestPrString.insert(highestPrString.end(), doc1Char);
+			}
+			else {
+				for (int i = 0; i < AMOUNT_OF_DATA && i < highestPr.size(); i++) {
+					if (currPr > highestPr[i]) {
+						highestPr.insert(highestPr.begin() + i, currPr);
+						highestPrString.insert(highestPrString.begin() + i, doc1Char);
+						break;
+					}
+					if (i == highestPr.size() - 1) {
+						highestPr.insert(highestPr.end(), currPr);
+						highestPrString.insert(highestPrString.end(), doc1Char);
+						break;
+					}
+				}
+			}
+			delete[] doc1Char;
+			delete[] doc2Char;
+			delete[] doc3Char;
+		}
+		for (int i = 0; i < AMOUNT_OF_DATA; i++) {
+			fsOutDoc << highestPrString[i] << " ";
+		}
+		fsOutDoc << endl;
+		fsInDoc1.close();
+	}
+	fsOutDoc.close();
+}
+
+void testPrecisionOfRecovered() {
+	bool cont = true;
+	string doc1 = "message.txt";
+	string doc2 = "recoveredMessage_V1.txt";
+	string doc3 = "recoveredMessage_V2.txt";
+	while (cont) {
+		cout << "To test " << doc2 << " and " << doc3 << " press . or enter name of document" << endl;
+		if (_getch() == '.') {
+			cout << "Getting precision from the document: " << doc3 << endl;
+			cout << "Got precision of " << doc2 << ":" << endl << getPrecisionOfRecovered(doc2, doc1) * 100 << " percent." << endl;
+			cout << "Got precision of: " << doc3 << ":" << endl << getPrecisionOfRecovered(doc3, doc1) * 100 << " percent." << endl;
+		}
+		else {
+			cin >> doc2;
+			cout << "Getting precision from the document: " << doc2 << ".txt" << endl;
+		}
+		cout << "Hit any key to go again or press '.' to end." << endl;
+		if (_getch() == '.') cont = false;
+	}
+}
+
+double getPrecisionOfRecovered(string observedDoc, string originalDoc) {
+	const double TOTAL_TRYS_GIVEN = 4;
+	int totalLines = 0;
+	int misses = 0;
+	ifstream fsInDoc1;
+	ifstream fsInDoc2;
+	string inLineDoc1;
+	string inLineDoc2;
+	fsInDoc1.open(observedDoc);
+	fsInDoc2.open(originalDoc);
+	while (fsInDoc2 >> inLineDoc2 ) {
+		totalLines++;
+		int lineCounter = 0;
+		while (lineCounter < 4 && fsInDoc1 >> inLineDoc1) {
+			if (inLineDoc1 == inLineDoc2) {
+				getline(fsInDoc1, inLineDoc1);
+				break;
+			}
+			lineCounter++;
+			misses++;
+		}
+	}
+	return 1 - (misses/ (totalLines * TOTAL_TRYS_GIVEN));
+}
